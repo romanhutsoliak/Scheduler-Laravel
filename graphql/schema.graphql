@@ -1,0 +1,78 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Account of a person who utilizes this application."
+type User {
+    "Unique primary key."
+    id: ID!
+
+    "Non-unique name."
+    name: String!
+
+    "Unique email address."
+    email: String!
+
+    "When the email was verified."
+    email_verified_at: DateTime
+
+    "When the account was created."
+    created_at: DateTime!
+
+    "When the account was last updated."
+    updated_at: DateTime!
+}
+
+type Task {
+    id: ID!
+    name: String!
+    description: String
+    startDateTime: DateTime
+    stopDateTime: DateTime
+    nextRunDateTime: DateTime
+    user: User
+    hasEvent: Boolean
+}
+
+type Query @guard {
+    tasks: [Task!] @paginate(defaultCount: 10)
+    task(id: ID @eq): Task @find
+}
+extend type Query {
+    currentUser: User @auth
+}
+
+type Mutation @guard {
+    createTask(name: String!, description: String): Task @create
+    updateTask(
+        id: ID @eq
+        name: String!
+        description: String @rules(apply: ["required"])
+    ): Task @update
+}
+
+# auth
+type Login {
+    user: User
+    token: String
+}
+extend type Mutation {
+    login(email: String!, password: String!): Login
+    logout: Login @guard
+    updateProfile(
+        id: ID @eq
+        name: String! @rules(apply: ["required"])
+        email: String! @rules(apply: ["email"])
+    ): User @update
+}
+
+# type Query @guard {
+#     user(
+#         id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+#         email: String
+#             @eq
+#             @rules(apply: ["prohibits:id", "required_without:id", "email"])
+#     ): User @find
+#     users(name: String @where(operator: "like")): [User!]
+#         @paginate(defaultCount: 10)
+# }
