@@ -32,6 +32,11 @@ type Task {
     nextRunDateTime: DateTime
     user: User
     hasEvent: Boolean
+    periodType: String
+    periodTypeTime: String
+    periodTypeWeekDays: [String]
+    periodTypeMonthDays: [String]
+    periodTypeMonths: [String]
 }
 
 type Query @guard {
@@ -46,8 +51,13 @@ type Mutation @guard {
     createTask(name: String!, description: String): Task @create
     updateTask(
         id: ID @eq
-        name: String!
-        description: String @rules(apply: ["required"])
+        name: String! @rules(apply: ["required"])
+        description: String
+        periodType: String
+        periodTypeTime: String
+        periodTypeWeekDays: [String]
+        periodTypeMonthDays: [String]
+        periodTypeMonths: [String]
     ): Task @update
 }
 

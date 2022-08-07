@@ -18,6 +18,17 @@ class Task extends Model
         'nextRunDateTime',
         'userId',
         'hasEvent',
+        'periodType',
+        'periodTypeTime',
+        'periodTypeWeekDays',
+        'periodTypeMonthDays',
+        'periodTypeMonths',
+    ];
+
+    public $casts = [
+        'periodTypeWeekDays' => 'array',
+        'periodTypeMonthDays' => 'array',
+        'periodTypeMonths' => 'array',
     ];
 
     protected static function boot()
