@@ -38,19 +38,27 @@ type Task {
     periodTypeMonthDays: [String]
     periodTypeMonths: [String]
 }
+type TaskHistory {
+    taskId: ID!
+    notes: String
+    created_at: DateTime
+}
 
 type Query @guard {
-    tasks: [Task!] @paginate(defaultCount: 10)
+    tasks(orderBy: [OrderBySchema!] @orderBy): [Task!]
+        @paginate(defaultCount: 10)
     task(id: ID @eq): Task @find
+    taskHistory(
+        taskId: ID @eq
+        orderBy: [OrderBySchema!] @orderBy
+    ): [TaskHistory] @all
 }
 extend type Query {
     currentUser: User @auth
 }
 
 type Mutation @guard {
-    createTask(name: String!, description: String): Task @create
-    updateTask(
-        id: ID @eq
+    createTask(
         name: String! @rules(apply: ["required"])
         description: String
         periodType: String
@@ -58,7 +66,19 @@ type Mutation @guard {
         periodTypeWeekDays: [String]
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
-    ): Task @update
+    ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@create")
+    updateTask(
+        id: ID! @eq @rules(apply: ["integer", "required"])
+        name: String! @rules(apply: ["required"])
+        description: String
+        periodType: String
+        periodTypeTime: String
+        periodTypeWeekDays: [String]
+        periodTypeMonthDays: [String]
+        periodTypeMonths: [String]
+    ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@update")
+    completeTask(id: ID! @eq, notes: String): Task
+        @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
 }
 
 # auth
@@ -74,6 +94,11 @@ extend type Mutation {
         name: String! @rules(apply: ["required"])
         email: String! @rules(apply: ["email"])
     ): User @update
+}
+
+enum SortOrder {
+    ASC
+    DESC
 }
 
 # type Query @guard {

@@ -6,7 +6,7 @@ use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class TaskEvent extends Model
+class TaskHistory extends Model
 {
     use HasFactory;
 
