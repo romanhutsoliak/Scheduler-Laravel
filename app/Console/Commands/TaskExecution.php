@@ -4,8 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Task;
-use Minishlink\WebPush\WebPush;
-use Minishlink\WebPush\Subscription;
 
 class TaskExecution extends Command
 {
@@ -32,21 +30,27 @@ class TaskExecution extends Command
      */
     public function handle()
     {
-        $expoPushToken = 'ExponentPushToken[kIDjBHI4CgM_dQlI7k6xhn]';
-        $postData = [
-            'to' => $expoPushToken,
-            'sound' => 'default',
-            'title' => 'Laravel Title',
-            'body' => 'And here is the body!',
-            'data' => [
-                'redirectTo' => '/tasks/1',
-            ],
-        ];
+        $tasks = Task::where('nextRunDateTime', date('Y-m-d H:i:00'))->get();
+        foreach ($tasks as $task) {
+            foreach ($task->userDevices as $userDevice) {
+                $postData = [
+                    'to' => $userDevice->notificationToken,
+                    'sound' => 'default',
+                    'title' => $task->name,
+                    'body' => $task->description,
+                    'data' => [
+                        'redirectTo' => '/tasks/' . $task->id,
+                    ],
+                ];
 
-        $this->sendPost('https://exp.host/--/api/v2/push/send', $postData, [
-            'Accept: application/json',
-            'Accept-encoding: gzip, deflate',
-            'Content-Type: application/json',
-        ]);
+                $this->sendPost('https://exp.host/--/api/v2/push/send', $postData, [
+                    'Accept: application/json',
+                    'Accept-encoding: gzip, deflate',
+                    'Content-Type: application/json',
+                ]);
+            }
+            $task->calculateNextRunDateTime(true);
+            $task->save();
+        }
     }
 }

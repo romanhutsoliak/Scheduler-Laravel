@@ -43,6 +43,14 @@ type TaskHistory {
     notes: String
     created_at: DateTime
 }
+type UserDevice {
+    deviceId: String!
+    platform: String
+    manufacturer: String
+    model: String
+    appVersion: String
+    notificationToken: String
+}
 
 type Query @guard {
     tasks(orderBy: [OrderBySchema!] @orderBy): [Task!]
@@ -77,11 +85,21 @@ type Mutation @guard {
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@update")
+    createUserDevice(
+        deviceId: String
+        platform: String
+        manufacturer: String
+        model: String
+        appVersion: String
+        notificationToken: String
+    ): UserDevice
+        @field(resolver: "App\\GraphQL\\Mutations\\UserDeviceMutator@create")
     completeTask(id: ID! @eq, notes: String): Task
         @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
 }
 
 # auth
+# ------------------------------------------------------------------
 type Login {
     user: User
     token: String

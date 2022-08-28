@@ -1,9 +1,8 @@
 <?php
-
-if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.77.107.31', '84.43.190.121']) && strpos($_SERVER['REMOTE_ADDR'], '46.133.') === false) {
-    header("HTTP/1.0 404 Not Found");
-    // die();
-}
+// if (!in_array($_SERVER['REMOTE_ADDR'], ['172.19.0.1'])) {
+//     header("HTTP/1.0 404 Not Found");
+//     die();
+// }
 
 ?><div class="content">
     <label class="filter_label" id="userId_filters_label">User filter: <div id="userId_filters"></div></label>
@@ -121,7 +120,7 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.7
 </style>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="pushstream.js"></script>
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script type="text/javascript">
     function prettyJson(json) {
         var res = "<ul>";
@@ -206,19 +205,20 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.7
     }
 
     // PushStream
-    var pushstream = new PushStream({
-        host: 'pusher.ohwhere.net',
-        port: 443,
-        useSSL: true,
-        jsonTextKey: 'data',
-        reconnectOnChannelUnavailableInterval: 30000,
-        modes: "websocket|eventsource|stream"
+    const pusher = new Pusher('scheduler_app123', {
+        cluster: 'mt1',
+        enabledTransports: ['ws', 'wss'],
+        forceTLS: false,
+        wsHost: '192.168.1.3',
+        wsPort: 6001,
     });
-    pushstream.LOG_LEVEL = 'debug';
-    pushstream.onstatuschange = _statuschanged;
-    pushstream.onmessage = function(data) {
-        //c(data.type + ' = function');
-        //c(data);
+    const channel = pusher.subscribe('http_logs');
+    channel.bind('App\\Events\\HttpLogEvent', function(data) {
+        // console.log(data.message);
+        data = data.payload;
+
+        // c(data.type + ' = function');
+        // c(data);
 
         if (typeof data.request == 'undefined') {
             console.log('Bad "data" recieved');
@@ -227,7 +227,9 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.7
         }
 
         var userId;
-        if (data.userId != null) userId = data.userId;
+        if (data.userId) userId = data.userId;
+        else if (data.data?.payload?.userId && data.data.payload.userId != null) userId = data.data.payload.userId;
+        else if (data.response?.data?.currentUser?.id) userId = data.response.data.currentUser.id;
         else if (typeof data.response != 'undefined' && typeof data.response.data != 'undefined' && typeof data.response.data.channelId != 'undefined' && typeof data.response.data.id != 'undefined') userId = data.response.data.id;
         else userId = null;
 
@@ -241,8 +243,17 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.7
             });
             if (!isset) $('#userId_filters').append('<label class="in_' + userId + '"><input type="checkbox" value="' + userId + '"><span>' + userId + '</span></label>');
         }
-        if ((data.uri == '/auth-user/user' || data.uri == '/auth-admin/user' || data.uri == '/auth/login') && userNameById(userId) == userId) {
-            userIdNames[userId] = data.response.data.firstName + ' ' + data.response.data.lastName;
+
+        // get user name
+        if ((
+                (data.uri == '/auth-user/user' || data.uri == '/auth-admin/user' || data.uri == '/auth/login') ||
+                (data.uri == '/graphql' && data.request?.data?.operationName && data.request.data.operationName == 'CurrentUser')
+            ) &&
+            userNameById(userId) == userId
+        ) {
+            if (data.uri == '/graphql') userIdNames[userId] = data.response.data.currentUser.name;
+            else userIdNames[userId] = data.response.data.firstName + ' ' + data.response.data.lastName;
+
             $('#userId_filters .in_' + userId + ' span').attr('title', userId).text(userIdNames[userId]);
             $('.table_tail tr').each(function() {
                 $(this).find('td:eq(1)').text($(this).find('td:eq(1)').text().replace(userId, userNameById(userId)));
@@ -265,32 +276,25 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['213.130.92.103', '128.124.80.23', '93.7
         }
 
         $('.table_tail tbody').prepend(`
-             <tr ` + (data.code != 200 && data.code != 201 ? 'style="background-color: #FED3D3;"' : (data.uri.indexOf('http') == 0 ? 'style="background-color: #fffc001a;"' : '')) + `>
-                <td style="color:#999;">` + (new Date()).toMysqlFormatTime() + `</td>
-                <td style="color: ` + userIdColor[userId] + `">` + userNameById(userId) + `</td>
-                <td title="Response code: ` + data.code + `">` + data.method + ` <span class="phpSpeed">` + data.phpProcessTime + `ms</span></td>
-                <td>` + data.uri + `</td>
-                <td>` + (!$.isEmptyObject(data.request.data) ? `<div class="prettyJson">` + prettyJson(data.request) + `</div>` : '') + `</td>
-                <td>` + (!$.isEmptyObject(data.response) ? `<div class="prettyJson">` + prettyJson(data.response) + `</div>` : '') + `</td>
-                <td>` + (!$.isEmptyObject(data.headers) ? `<div class="prettyJson">` + prettyJson(data.headers) + `</div>` : '') + `</td>
-            </tr>
-        `);
-    };
-
-    function _statuschanged(state) {
-
-    };
-
-    function _connect(channel) {
-        pushstream.removeAllChannels();
-        try {
-            pushstream.addChannel(channel);
-            pushstream.connect();
-        } catch (e) {
-            alert(e)
-        };
-        $("#chat").val('');
-    }
-    _connect('22');
+                 <tr ` + (data.code != 200 && data.code != 201 ? 'style="background-color: #FED3D3;"' : (data.uri.indexOf('http') == 0 ? 'style="background-color: #fffc001a;"' : '')) + `>
+                    <td style="color:#999;">` + (new Date()).toMysqlFormatTime() + `</td>
+                    <td style="color: ` + userIdColor[userId] + `">` + userNameById(userId) + `</td>
+                    <td title="Response code: ` + data.code + `">` + data.method + ` <span class="phpSpeed">` + data.phpProcessTime + `ms</span></td>
+                    <td>` + data.uri + (data.uri == '/graphql' ? ' <span class="phpSpeed">' + data.request?.data?.operationName + '</span>' : '') + `</td>
+                    <td>` + (!$.isEmptyObject(data.request.data) ? `<div class="prettyJson">` + prettyJson(data.request) + `</div>` : '') + `</td>
+                    <td>` + (!$.isEmptyObject(data.response) ? `<div class="prettyJson">` + prettyJson(data.response) + `</div>` : '') + `</td>
+                    <td>` + (!$.isEmptyObject(data.headers) ? `<div class="prettyJson">` + prettyJson(data.headers) + `</div>` : '') + `</td>
+                </tr>
+            `);
+    });
+    channel.bind('my-event', function() {
+        console.log(`hi ${this.name}`);
+    }, {
+        name: 'Pusher'
+    });
+    pusher.connection.bind('state_change', function(states) {
+        // states = {previous: 'oldState', current: 'newState'}
+        $('div#status').text("Channels current state is " + states.current);
+    });
     // end PushStream
 </script>

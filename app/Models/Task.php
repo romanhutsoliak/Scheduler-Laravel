@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\User\User;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\TaskHistory;
@@ -49,6 +49,11 @@ class Task extends Model
     public function history()
     {
         return $this->hasMany(TaskHistory::class, 'taskId');
+    }
+
+    public function userDevices()
+    {
+        return $this->hasMany(UserDevice::class, 'userId', 'userId');
     }
 
     public function calculateNextRunDateTime($fill = true)
