@@ -105,13 +105,19 @@ type Login {
     token: String
 }
 extend type Mutation {
-    login(email: String!, password: String!): Login
+    login(email: String! @rules(apply: ["email"]), password: String!): Login
+    userRegistration(
+        name: String
+        email: String! @rules(apply: ["email", "unique:users,email"])
+        password: String! @rules(apply: ["confirmed"])
+        password_confirmation: String!
+    ): Login
     logout: Login @guard
     updateProfile(
         id: ID @eq
         name: String! @rules(apply: ["required"])
         email: String! @rules(apply: ["email"])
-    ): User @update
+    ): User @update @guard
 }
 
 enum SortOrder {

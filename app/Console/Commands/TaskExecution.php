@@ -30,7 +30,7 @@ class TaskExecution extends Command
      */
     public function handle()
     {
-        $tasks = Task::where('nextRunDateTime', date('Y-m-d H:i:00'))->get();
+        $tasks = Task::where('nextRunDateTime', '<=', date('Y-m-d H:i:00'))->get();
         foreach ($tasks as $task) {
             foreach ($task->userDevices as $userDevice) {
                 $postData = [
