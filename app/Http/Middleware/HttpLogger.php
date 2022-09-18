@@ -70,16 +70,10 @@ class HttpLogger
             'isSupport' => false,
         ];
 
-        if (strpos($uri, '/auth-admin/') === 0) {
-            if (auth()->user() && auth()->user()->roles->where('name', 'Support team')->count()) $payload['isSupport'] = true;
-        }
-
         try {
             event(new HttpLogEvent($payload));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::debug('HttpLogger: ' . $e->getMessage());
-            \Illuminate\Support\Facades\Log::debug('payload: ' . print_r($payload, true));
-            \Illuminate\Support\Facades\Log::debug('request_all: ' . print_r($request->all(), true));
         }
     }
 }

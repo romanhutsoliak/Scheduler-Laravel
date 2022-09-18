@@ -2,24 +2,12 @@
 scalar DateTime
     @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
-"Account of a person who utilizes this application."
 type User {
-    "Unique primary key."
-    id: ID!
-
-    "Non-unique name."
-    name: String!
-
-    "Unique email address."
-    email: String!
-
-    "When the email was verified."
+    name: String
+    email: String
     email_verified_at: DateTime
-
-    "When the account was created."
+    timezoneOffset: Int
     created_at: DateTime!
-
-    "When the account was last updated."
     updated_at: DateTime!
 }
 
@@ -30,6 +18,7 @@ type Task {
     startDateTime: DateTime
     stopDateTime: DateTime
     nextRunDateTime: DateTime
+    mustBeCompleted: Boolean
     user: User
     hasEvent: Boolean
     periodType: String
@@ -50,10 +39,12 @@ type UserDevice {
     model: String
     appVersion: String
     notificationToken: String
+    updated_at: String
 }
 
 type Query @guard {
     tasks(orderBy: [OrderBySchema!] @orderBy): [Task!]
+        @whereAuth(relation: "user")
         @paginate(defaultCount: 10)
     task(id: ID @eq): Task @find
     taskHistory(
@@ -74,6 +65,7 @@ type Mutation @guard {
         periodTypeWeekDays: [String]
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
+        mustBeCompleted: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@create")
     updateTask(
         id: ID! @eq @rules(apply: ["integer", "required"])
@@ -84,6 +76,7 @@ type Mutation @guard {
         periodTypeWeekDays: [String]
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
+        mustBeCompleted: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@update")
     createUserDevice(
         deviceId: String
@@ -94,6 +87,8 @@ type Mutation @guard {
         notificationToken: String
     ): UserDevice
         @field(resolver: "App\\GraphQL\\Mutations\\UserDeviceMutator@create")
+    updateUserTimezone(timezoneOffset: Int!): User
+        @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@updateTimezone")
     completeTask(id: ID! @eq, notes: String): Task
         @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
 }
@@ -111,13 +106,20 @@ extend type Mutation {
         email: String! @rules(apply: ["email", "unique:users,email"])
         password: String! @rules(apply: ["confirmed"])
         password_confirmation: String!
-    ): Login
+    ): Login @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@register")
     logout: Login @guard
+    createUserFromDevice(deviceId: String!, timezoneOffset: Int): Login
+        @field(
+            resolver: "App\\GraphQL\\Mutations\\UserMutator@createFromDevice"
+        )
     updateProfile(
-        id: ID @eq
-        name: String! @rules(apply: ["required"])
+        name: String
         email: String! @rules(apply: ["email"])
-    ): User @update @guard
+        password: String @rules(apply: ["confirmed"])
+        password_confirmation: String
+    ): User
+        @guard
+        @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@update")
 }
 
 enum SortOrder {

@@ -16,8 +16,8 @@ class Task extends Model
         'description',
         'startDateTime',
         'stopDateTime',
-        'nextRunDateTime',
         'userId',
+        'mustBeCompleted',
         'hasEvent',
         'periodType',
         'periodTypeTime',
@@ -30,6 +30,15 @@ class Task extends Model
         'periodTypeWeekDays' => 'array',
         'periodTypeMonthDays' => 'array',
         'periodTypeMonths' => 'array',
+        'mustBeCompleted' => 'boolean',
+    ];
+
+    public $periodTypes = [
+        '1' => 'Daily',
+        '2' => 'Weekly',
+        '3' => 'Monthly',
+        '4' => 'Yearly',
+        '5' => 'Once',
     ];
 
     protected static function boot()
@@ -56,49 +65,69 @@ class Task extends Model
         return $this->hasMany(UserDevice::class, 'userId', 'userId');
     }
 
-    public function calculateNextRunDateTime($fill = true)
+    /**
+     * Undocumented function
+     *
+     * @param boolean $fill
+     * @param boolean $forceMoveToNextPeriod - force move event to next time if there is not long time to next event
+     * @return $nextRunDateTime - time when to run next time
+     */
+    public function calculateNextRunDateTime($fill = true, $forceMoveToNextPeriod = false)
     {
+        $currentTimestamp = time() - $this->user->timezoneOffset * 60;
         $nextRunDateTime = null;
+        $scheduledTimestamp = strtotime(date('Y-m-d ' . $this->periodTypeTime . ':00', $currentTimestamp));
+        // daily
         if ($this->periodType == 1) {
-            $currentDayTime = strtotime(date('Y-m-d ' . $this->periodTypeTime . ':00'));
-            if ($currentDayTime > time()) {
-                $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $currentDayTime);
+            if ($currentTimestamp < $scheduledTimestamp) {
+                if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (3 * 3600))
+                    $scheduledTimestamp += 86400;
+                $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $scheduledTimestamp);
             } else {
-                $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $currentDayTime + 86400);
+                $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $scheduledTimestamp + 86400);
             }
-        } else if ($this->periodType == 2) {
-            $currentDayTime = strtotime(date('Y-m-d ' . $this->periodTypeTime . ':00'));
+        }
+        // weekly
+        else if ($this->periodType == 2) {
             $i = 0;
             while (!$nextRunDateTime && $i < 100) {
-                if ($currentDayTime > time()) {
-                    if (in_array(date('N', $currentDayTime), $this->periodTypeWeekDays)) {
-                        $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $currentDayTime);
+                if ($currentTimestamp < $scheduledTimestamp) {
+                    if (in_array(date('N', $scheduledTimestamp), $this->periodTypeWeekDays)) {
+                        $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $scheduledTimestamp);
+                        if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < 86400)
+                            $nextRunDateTime = null;
                     }
                 }
-                $currentDayTime +=  86400;
+                $scheduledTimestamp +=  86400;
                 $i++;
             }
-        } else if ($this->periodType == 3) {
-            $currentDayTime = strtotime(date('Y-m-d ' . $this->periodTypeTime . ':00'));
+        }
+        // monthly
+        else if ($this->periodType == 3) {
             $i = 0;
             while (!$nextRunDateTime && $i < 100) {
-                if ($currentDayTime > time()) {
-                    if (in_array(date('j', $currentDayTime), $this->periodTypeMonthDays)) {
-                        $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $currentDayTime);
+                if ($currentTimestamp < $scheduledTimestamp) {
+                    if (in_array(date('j', $scheduledTimestamp), $this->periodTypeMonthDays)) {
+                        $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $scheduledTimestamp);
+                        if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (2 * 86400))
+                            $nextRunDateTime = null;
                     }
                 }
-                $currentDayTime +=  86400;
+                $scheduledTimestamp +=  86400;
                 $i++;
             }
-        } else if ($this->periodType == 4) {
-            $currentDayTime = strtotime(date('Y-m-d ' . $this->periodTypeTime . ':00'));
+        }
+        // yearly
+        else if ($this->periodType == 4) {
             // make available dates array
             $dates = [];
             foreach ($this->periodTypeMonthDays as $day) {
                 foreach ($this->periodTypeMonths as $month) {
-                    $currentDayTime = strtotime(date('Y-' . $month . '-' . $day . ' ' . $this->periodTypeTime . ':00'));
-                    if ($currentDayTime > time()) {
-                        $dates[] = $currentDayTime;
+                    $scheduledTimestamp = strtotime(date('Y-' . $month . '-' . $day . ' ' . $this->periodTypeTime . ':00'));
+                    if ($currentTimestamp < $scheduledTimestamp) {
+                        $dates[] = $scheduledTimestamp;
+                        if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (3 * 86400))
+                            $dates = array_pop($dates);
                     } else {
                         $dates[] = strtotime(date((string)((int)date('Y') + 1) . '-' . $month . '-' . $day . ' ' . $this->periodTypeTime . ':00'));
                     }
@@ -112,7 +141,14 @@ class Task extends Model
             if ($minDate < 2300000000)
                 $nextRunDateTime = date('Y-m-d ' . $this->periodTypeTime . ':00', $minDate);
         }
-        if ($fill) $this->nextRunDateTime = $nextRunDateTime;
+        // once
+        else if ($this->periodType == 5) {
+            // do nothing
+        }
+        if ($fill) {
+            $this->nextRunDateTime = $nextRunDateTime;
+            $this->nextRunDateTimeUtc = date('Y-m-d H:i:00', (strtotime($nextRunDateTime) + $this->user->timezoneOffset * 60));
+        }
         return $nextRunDateTime;
     }
 }

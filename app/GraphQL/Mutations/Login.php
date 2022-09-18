@@ -14,9 +14,13 @@ final class Login
      */
     public function __invoke($_, array $args)
     {
-        $user = User::where('email', $args['email'])->first();
+        $user = User::where('email', $args['email'])
+            ->whereNotNull('email')->whereNotNull('password')->first();
 
-        if (!$user || !Hash::check($args['password'], $user->password)) {
+        if (
+            empty($args['email']) || empty($args['password']) ||
+            !$user || !Hash::check($args['password'], $user->password)
+        ) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -27,6 +31,7 @@ final class Login
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'timezoneOffset' => $user->timezoneOffset,
             ],
             'token' => $user->createToken('')->plainTextToken,
         ];

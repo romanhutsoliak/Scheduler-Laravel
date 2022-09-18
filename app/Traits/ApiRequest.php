@@ -1,22 +1,30 @@
 <?php
+
 namespace App\Traits;
 
-trait ApiRequest {
+use App\Events\HttpLogEvent;
+
+trait ApiRequest
+{
 
     // if need override this function to provide autorication header
-    protected function makeAuthorizationToken($param) {
+    protected function makeAuthorizationToken($param)
+    {
         return null;
     }
 
-    public function sendGet(string $action, array $params = [], array $headers = []) {
+    public function sendGet(string $action, array $params = [], array $headers = [])
+    {
         return $this->sendCommonStream($action, $params, $headers, 'GET');
     }
 
-    public function sendPost(string $action, array $params = [], array $headers = []) {
+    public function sendPost(string $action, array $params = [], array $headers = [])
+    {
         return $this->sendCommonStream($action, $params, $headers, 'POST');
     }
 
-    protected function sendCommonStream(string $action, array $params = [], array $headers = [], $method = 'GET') {
+    protected function sendCommonStream(string $action, array $params = [], array $headers = [], $method = 'GET')
+    {
         $startTime = microtime(true);
 
         if (strpos($action, 'http') === 0)
@@ -111,17 +119,37 @@ trait ApiRequest {
         if ($code != 200 && (int) $code > 200 && !isset($response['status']))
             $response['status'] = $code;
 
+
+        $payload = [
+            'userId' => auth()->user()->id ?? null,
+            'method' => $method,
+            'uri' => $url,
+            'code' => $code,
+            'request' => $params,
+            'response' => $response,
+            'headers' => ['headers' => $headers],
+            'phpProcessTime' => (string)(int)((microtime(true) - $startTime) * 1000),
+            'isSupport' => false,
+        ];
+
+        try {
+            event(new HttpLogEvent($payload));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::debug('ApiRequest HttpLogger: ' . $e->getMessage());
+        }
+
         return $response;
     }
 
-    public function sendCurl(string $action, array $params = [], array $headers = [], $method = 'POST', $return_with_headers = false) {
+    public function sendCurl(string $action, array $params = [], array $headers = [], $method = 'POST', $return_with_headers = false)
+    {
 
         if (strpos($action, 'http') === 0) $url = $action;
-        else $url = $this->api_url.$action;
-        
+        else $url = $this->api_url . $action;
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        
+
         $hasContentType = false;
         $hasAccept = false;
         foreach ($headers as $h) {
@@ -130,21 +158,21 @@ trait ApiRequest {
         }
         if (!$hasContentType) $headers[] = "Content-Type: application/json";
         if (!$hasAccept) $headers[] = "Accept: application/json, text/plain, */*";
-        
+
         $encodeData = false;
         foreach ($headers as $h) {
             if (strpos($h, 'Content-Type: application/json') === 0) $encodeData = true;
         }
         if ($encodeData) $data_string = json_encode($params);
         else $data_string = http_build_query($params, '', '&');
-        
+
         $headers[] = "Content-Length: " . strlen($data_string);
-        
+
         if ($method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if (!empty($params)) curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string); //json_encode //http_build_query($params, '', '&')
         }
-        
+
         curl_setopt($ch, CURLOPT_TIMEOUT, 10); // переходить по редиректам
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // переходить по редиректам
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5); //Максимальное количество постоянных соединений
@@ -153,25 +181,25 @@ trait ApiRequest {
             curl_setopt($ch, CURLOPT_HEADER, true); // выводить заголовки
             curl_setopt($ch, CURLOPT_VERBOSE, true); // выводит сведения о сертификатах
         }
-        
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
+
         $server_output = curl_exec($ch);
-        
+
         if ($return_with_headers) {
             $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
             $header = substr($server_output, 0, $header_size);
             $body = substr($server_output, $header_size);
-        
-            curl_close ($ch);
+
+            curl_close($ch);
             return [
                 'all' => $server_output,
                 'header' => $header,
                 'body' => $body,
             ];
-        } 
-        curl_close ($ch);
-        
+        }
+        curl_close($ch);
+
         return $server_output;
     }
 }

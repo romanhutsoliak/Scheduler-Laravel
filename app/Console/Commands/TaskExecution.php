@@ -26,11 +26,12 @@ class TaskExecution extends Command
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return mixed
      */
     public function handle()
     {
-        $tasks = Task::where('nextRunDateTime', '<=', date('Y-m-d H:i:00'))->get();
+        $tasks = Task::where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))->get();
+        // echo $tasks->count() . "\n";
         foreach ($tasks as $task) {
             foreach ($task->userDevices as $userDevice) {
                 $postData = [
@@ -49,8 +50,10 @@ class TaskExecution extends Command
                     'Content-Type: application/json',
                 ]);
             }
-            $task->calculateNextRunDateTime(true);
-            $task->save();
+            if (!$task->mustBeCompleted) {
+                $task->calculateNextRunDateTime(true);
+                $task->save();
+            }
         }
     }
 }

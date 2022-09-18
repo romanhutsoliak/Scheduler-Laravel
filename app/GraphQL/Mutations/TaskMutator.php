@@ -55,6 +55,9 @@ class TaskMutator
             'notes' => $args['notes'] ?? ''
         ]);
 
+        $task->calculateNextRunDateTime(true, true);
+        $task->save();
+
         return $task;
     }
 }
