@@ -5,8 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Models\SocketQueue\SocketQueue;
-use App\Services\HttpLoggerWebSocket;
 use App\Events\HttpLogEvent;
 
 class HttpLogger

@@ -30,11 +30,19 @@ class TaskExecution extends Command
      */
     public function handle()
     {
-        $tasks = Task::where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))->get();
-        // echo $tasks->count() . "\n";
+        $tasks = Task::where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
+            ->orWhere(function ($query) {
+                $query->where('mustBeCompleted', 0)->where('nextRunDateTimeUtc', '<', date('Y-m-d H:i:00'));
+            })
+            ->get();
+
+        echo $tasks->count() . "\n";
         foreach ($tasks as $task) {
             foreach ($task->userDevices as $userDevice) {
-                $postData = [
+                if (!$userDevice->notificationToken)
+                    continue;
+
+                $this->sendPost('https://exp.host/--/api/v2/push/send', [
                     'to' => $userDevice->notificationToken,
                     'sound' => 'default',
                     'title' => $task->name,
@@ -42,9 +50,7 @@ class TaskExecution extends Command
                     'data' => [
                         'redirectTo' => '/tasks/' . $task->id,
                     ],
-                ];
-
-                $this->sendPost('https://exp.host/--/api/v2/push/send', $postData, [
+                ], [
                     'Accept: application/json',
                     'Accept-encoding: gzip, deflate',
                     'Content-Type: application/json',
