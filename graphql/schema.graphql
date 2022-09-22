@@ -42,6 +42,10 @@ type UserDevice {
     updated_at: String
 }
 
+type ResultOk {
+    result: String
+}
+
 type Query @guard {
     tasks(orderBy: [OrderBySchema!] @orderBy): [Task!]
         @whereAuth(relation: "user")
@@ -91,6 +95,12 @@ type Mutation @guard {
         @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@updateTimezone")
     completeTask(id: ID! @eq, notes: String): Task
         @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
+    createMissedLanguage(
+        language: String,
+        text: String,
+        url: String
+    ): ResultOk @field(resolver: "App\\GraphQL\\Mutations\\MissedLanguageMutator@create")
+        
 }
 
 # auth
