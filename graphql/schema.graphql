@@ -95,12 +95,14 @@ type Mutation @guard {
         @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@updateTimezone")
     completeTask(id: ID! @eq, notes: String): Task
         @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
+}
+# it shouldn't be @guard as it breaks login/register page when no language
+extend type Mutation {
     createMissedLanguage(
         language: String,
         text: String,
         url: String
     ): ResultOk @field(resolver: "App\\GraphQL\\Mutations\\MissedLanguageMutator@create")
-        
 }
 
 # auth
