@@ -119,7 +119,8 @@ extend type Mutation {
         password: String! @rules(apply: ["confirmed"])
         password_confirmation: String!
     ): Login @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@register")
-    logout: Login @guard
+    logout(deviceId: String): ResultOk @guard
+        @field(resolver: "App\\GraphQL\\Mutations\\Logout")
     createUserFromDevice(deviceId: String!, timezoneOffset: Int): Login
         @field(
             resolver: "App\\GraphQL\\Mutations\\UserMutator@createFromDevice"

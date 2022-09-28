@@ -2,10 +2,7 @@
 
 namespace App\GraphQL\Mutations;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 final class Logout
 {
@@ -18,12 +15,12 @@ final class Logout
         $user = Auth::user();
         $user->tokens()->delete();
 
+        if (!empty($args['deviceId'])) {
+            $user->devices()->where('deviceId', $args['deviceId'])->delete();
+        }
+
         return [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+            'result' => 'ok',
         ];
     }
 }
