@@ -18,8 +18,10 @@ class TaskMutator
     public function create($rootValue, array $args, GraphQLContext $context)
     {
         $task = Task::create($args);
-        $task->calculateNextRunDateTime(true);
-        $task->save();
+        if ($task->isActive) {
+            $task->calculateNextRunDateTime(true);
+            $task->save();
+        }
 
         // $context->user()->articles()->save($article);
 
@@ -36,11 +38,16 @@ class TaskMutator
      */
     public function update($rootValue, array $args, GraphQLContext $context)
     {
-        $task = Task::find($args['id']);
-        if (!$task) return response(['message' => '404'], 422);
+        $task = Task::where([
+                'id' => $args['id'],
+                'userId' => $context->user()->id,
+            ])->first();
+        if (!$task)
+            return response(['message' => '404'], 422);
 
         $task->fill($args);
-        $task->calculateNextRunDateTime(true);
+        if ($task->isActive)
+            $task->calculateNextRunDateTime(true);
         $task->save();
 
         return $task;
@@ -48,16 +55,34 @@ class TaskMutator
 
     public function completeTask($rootValue, array $args, GraphQLContext $context)
     {
-        $task = Task::find($args['id']);
+        $task = Task::where([
+                'id' => $args['id'],
+                'userId' => $context->user()->id,
+            ])->first();
         if (!$task) return response(['message' => '404'], 422);
 
         $task->history()->create([
             'notes' => $args['notes'] ?? ''
         ]);
 
-        $task->calculateNextRunDateTime(true, true);
+        if ($task->isActive)
+            $task->calculateNextRunDateTime(true, true);
         $task->save();
 
         return $task;
     }
+
+    public function deleteTask($rootValue, array $args, GraphQLContext $context) {
+        $task = Task::where([
+                'id' => $args['id'],
+                'userId' => $context->user()->id,
+            ])->first();
+        if (!$task)
+            return response(['message' => '404'], 422);
+
+        $task->delete();
+
+        return ['result' => 'ok'];
+    }
+
 }

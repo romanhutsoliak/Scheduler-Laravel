@@ -30,9 +30,12 @@ class TaskExecution extends Command
      */
     public function handle()
     {
-        $tasks = Task::where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
-            ->orWhere(function ($query) {
-                $query->where('mustBeCompleted', 0)->where('nextRunDateTimeUtc', '<', date('Y-m-d H:i:00'));
+        $tasks = Task::where('isActive', 1)
+            ->where(function ($query) {
+                $query->where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
+                ->orWhere(function ($query) {
+                    $query->where('mustBeCompleted', 0)->where('nextRunDateTimeUtc', '<', date('Y-m-d H:i:00'));
+                });
             })
             ->get();
 

@@ -19,6 +19,7 @@ type Task {
     stopDateTime: DateTime
     nextRunDateTime: DateTime
     mustBeCompleted: Boolean
+    isActive: Boolean
     user: User
     hasEvent: Boolean
     periodType: String
@@ -70,6 +71,7 @@ type Mutation @guard {
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
         mustBeCompleted: Boolean
+        isActive: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@create")
     updateTask(
         id: ID! @eq @rules(apply: ["integer", "required"])
@@ -81,6 +83,7 @@ type Mutation @guard {
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
         mustBeCompleted: Boolean
+        isActive: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@update")
     createUserDevice(
         deviceId: String
@@ -95,6 +98,8 @@ type Mutation @guard {
         @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@updateTimezone")
     completeTask(id: ID! @eq, notes: String): Task
         @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@completeTask")
+    deleteTask(id: ID! @eq): ResultOk
+        @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@deleteTask")
 }
 # it shouldn't be @guard as it breaks login/register page when no language
 extend type Mutation {

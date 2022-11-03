@@ -6,10 +6,12 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\TaskHistory;
+use \Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        SoftDeletes;
 
     public $fillable = [
         'name',
@@ -24,6 +26,7 @@ class Task extends Model
         'periodTypeWeekDays',
         'periodTypeMonthDays',
         'periodTypeMonths',
+        'isActive',
     ];
 
     public $casts = [
@@ -31,6 +34,7 @@ class Task extends Model
         'periodTypeMonthDays' => 'array',
         'periodTypeMonths' => 'array',
         'mustBeCompleted' => 'boolean',
+        'isActive' => 'boolean',
     ];
 
     public $periodTypes = [
