@@ -1,0 +1,12 @@
+vendor/
+nbproject/
+.git
+.vscode
+.gitignore
+.dockerignore
+.env.local
+.env.prod
+.env
+Dockerfile.dev
+Dockerfile.prod
+docker-compose.yml

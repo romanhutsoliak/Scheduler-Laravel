@@ -59,7 +59,7 @@ class TaskExecution extends Command
                     'Content-Type: application/json',
                 ]);
             }
-            if (!$task->mustBeCompleted) {
+            if (!$task->mustBeCompleted && $task->periodType != 5) {
                 $task->calculateNextRunDateTime(true);
                 $task->save();
             }
