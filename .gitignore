@@ -16,3 +16,5 @@ yarn-error.log
 /.vscode
 /nbproject
 /supervisord.log
+/composer.lock
+/package-lock.json
