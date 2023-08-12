@@ -17,9 +17,10 @@ class TaskMutator
      */
     public function create($rootValue, array $args, GraphQLContext $context)
     {
+        /* @var $task Task */
         $task = Task::create($args);
         if ($task->isActive) {
-            $task->calculateNextRunDateTime(true);
+            $task->calculateAndFillNextRunDateTime();
             $task->save();
         }
 
@@ -38,16 +39,19 @@ class TaskMutator
      */
     public function update($rootValue, array $args, GraphQLContext $context)
     {
+        /* @var $task Task */
         $task = Task::where([
                 'id' => $args['id'],
                 'userId' => $context->user()->id,
             ])->first();
-        if (!$task)
+        if (!$task) {
             return response(['message' => '404'], 422);
+        }
 
         $task->fill($args);
-        if ($task->isActive)
-            $task->calculateNextRunDateTime(true);
+        if ($task->isActive) {
+            $task->calculateAndFillNextRunDateTime();
+        }
         $task->save();
 
         return $task;
@@ -55,30 +59,36 @@ class TaskMutator
 
     public function completeTask($rootValue, array $args, GraphQLContext $context)
     {
+        /* @var $task Task */
         $task = Task::where([
                 'id' => $args['id'],
                 'userId' => $context->user()->id,
             ])->first();
-        if (!$task) return response(['message' => '404'], 422);
+        if (!$task) {
+            return response(['message' => '404'], 422);
+        }
 
         $task->history()->create([
             'notes' => $args['notes'] ?? ''
         ]);
 
-        if ($task->isActive)
-            $task->calculateNextRunDateTime(true, true);
+        if ($task->isActive) {
+            $task->calculateAndFillNextRunDateTime(true);
+        }
         $task->save();
 
         return $task;
     }
 
     public function deleteTask($rootValue, array $args, GraphQLContext $context) {
+        /* @var $task Task */
         $task = Task::where([
                 'id' => $args['id'],
                 'userId' => $context->user()->id,
             ])->first();
-        if (!$task)
+        if (!$task) {
             return response(['message' => '404'], 422);
+        }
 
         $task->delete();
 

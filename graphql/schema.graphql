@@ -18,7 +18,6 @@ type Task {
     startDateTime: DateTime
     stopDateTime: DateTime
     nextRunDateTime: DateTime
-    mustBeCompleted: Boolean
     isActive: Boolean
     user: User
     hasEvent: Boolean
@@ -70,7 +69,6 @@ type Mutation @guard {
         periodTypeWeekDays: [String]
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
-        mustBeCompleted: Boolean
         isActive: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@create")
     updateTask(
@@ -82,7 +80,6 @@ type Mutation @guard {
         periodTypeWeekDays: [String]
         periodTypeMonthDays: [String]
         periodTypeMonths: [String]
-        mustBeCompleted: Boolean
         isActive: Boolean
     ): Task @field(resolver: "App\\GraphQL\\Mutations\\TaskMutator@update")
     createUserDevice(

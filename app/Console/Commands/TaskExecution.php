@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\TaskPeriodTypesEnum;
 use Illuminate\Console\Command;
 use App\Models\Task;
 use Illuminate\Support\Facades\Http;
@@ -31,16 +32,12 @@ class TaskExecution extends Command
     public function handle()
     {
         $tasks = Task::where('isActive', 1)
-            ->where(function ($query) {
-                $query->where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
-                ->orWhere(function ($query) {
-                    $query->where('mustBeCompleted', 0)->where('nextRunDateTimeUtc', '<', date('Y-m-d H:i:00'));
-                });
-            })
+            ->where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
+            ->with('userDevices')
             ->get();
 
-        echo $tasks->count() . "\n";
         foreach ($tasks as $task) {
+            /* @var $task Task */
             foreach ($task->userDevices as $userDevice) {
                 if (!$userDevice->notificationToken)
                     continue;
@@ -70,8 +67,8 @@ class TaskExecution extends Command
                     ],
                 ]);
             }
-            if (!$task->mustBeCompleted && $task->periodType != 5) {
-                $task->calculateNextRunDateTime(true);
+            if ($task->periodType != TaskPeriodTypesEnum::Once) {
+                $task->calculateAndFillNextRunDateTime();
                 $task->save();
             }
         }

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\TaskPeriodTypesEnum;
+use App\Managers\TaskManager;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\TaskHistory;
-use \Illuminate\Database\Eloquent\SoftDeletes;
-use App\Services\CalculateNextRunDateTimeService;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
@@ -20,9 +20,8 @@ class Task extends Model
         'startDateTime',
         'stopDateTime',
         'userId',
-        'mustBeCompleted',
         'hasEvent',
-        'periodType',
+        'periodTypeId',
         'periodTypeTime',
         'periodTypeWeekDays',
         'periodTypeMonthDays',
@@ -30,28 +29,39 @@ class Task extends Model
         'isActive',
     ];
 
+    protected $appends = ['periodType'];
     public $casts = [
         'periodTypeWeekDays' => 'array',
         'periodTypeMonthDays' => 'array',
         'periodTypeMonths' => 'array',
-        'mustBeCompleted' => 'boolean',
         'isActive' => 'boolean',
+        'periodTypeId' => TaskPeriodTypesEnum::class,
     ];
 
-    public $periodTypes = [
-        '1' => 'Daily',
-        '2' => 'Weekly',
-        '3' => 'Monthly',
-        '4' => 'Yearly',
-        '5' => 'Once',
-    ];
+    protected function periodType(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->periodTypeId->name ?? '',
+        );
+    }
+
+    public function fill(array $attributes): self
+    {
+        if (!empty($attributes['periodType'])) {
+            $attributes['periodTypeId'] = collect(TaskPeriodTypesEnum::cases())->where('name', $attributes['periodType'])->first() ?? null;
+            unset($attributes['periodType']);
+        }
+        return parent::fill($attributes);
+    }
 
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
-            if (!$model->userId) $model->userId = auth()->user()->id ?? null;
+            if (!$model->userId) {
+                $model->userId = auth()->user()->id ?? null;
+            }
         });
     }
 
@@ -70,24 +80,22 @@ class Task extends Model
         return $this->hasMany(UserDevice::class, 'userId', 'userId');
     }
 
+    public function manager(): TaskManager
+    {
+        return new TaskManager($this);
+    }
+
     /**
      * Calculate Next Run Date Time
      *
-     * @param boolean $fill
      * @param boolean $forceMoveToNextPeriod - force move event to next time if there is not long time to next event
-     * @return array $nextRunDateTime - time when to run next time
+     * @return void
      */
-    public function calculateNextRunDateTime($fill = true, $forceMoveToNextPeriod = false)
+    public function calculateAndFillNextRunDateTime(bool $forceMoveToNextPeriod = false): void
     {
-        $calculator = new CalculateNextRunDateTimeService($this);
-        $calculationResult = $calculator->calculateNextRunDateTime($forceMoveToNextPeriod);
+        $calculationResult = $this->manager()->calculateNextRunDateTime($forceMoveToNextPeriod);
 
-        if ($fill) {
-            if (!empty($calculationResult['nextRunDateTime']))
-                $this->nextRunDateTime = $calculationResult['nextRunDateTime'];
-            if (!empty($calculationResult['nextRunDateTimeUtc']))
-                $this->nextRunDateTimeUtc = $calculationResult['nextRunDateTimeUtc'];
-        }
-        return $calculationResult;
+        $this->nextRunDateTime = $calculationResult['nextRunDateTime'];
+        $this->nextRunDateTimeUtc = $calculationResult['nextRunDateTimeUtc'];
     }
 }
