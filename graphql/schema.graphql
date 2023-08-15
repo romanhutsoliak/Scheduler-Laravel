@@ -19,13 +19,19 @@ type Task {
     stopDateTime: DateTime
     nextRunDateTime: DateTime
     isActive: Boolean
-    user: User
+    user: User @belongsTo
     hasEvent: Boolean
     periodType: String
     periodTypeTime: String
     periodTypeWeekDays: [String]
     periodTypeMonthDays: [String]
     periodTypeMonths: [String]
+    category: TaskCategory @belongsTo
+}
+type TaskCategory {
+    name: String
+    slug: String
+    label: String
 }
 type TaskHistory {
     taskId: ID!
@@ -46,8 +52,18 @@ type ResultOk {
     result: String
 }
 
+input TaskFiltersList {
+    category: String
+}
+
 type Query @guard {
-    tasks(orderBy: [OrderBySchema!] @orderBy): [Task!]
+    tasks(
+        orderBy: [OrderBySchema!] @orderBy,
+        search: String @scope(name:"searchOnList"),
+        filter: TaskFiltersList @scope(name:"filtersOnList"),
+        first: Int
+        page: Int
+    ): [Task!]
         @whereAuth(relation: "user")
         @paginate(defaultCount: 10)
     task(id: ID @eq): Task @find
@@ -55,6 +71,14 @@ type Query @guard {
         taskId: ID @eq
         orderBy: [OrderBySchema!] @orderBy
     ): [TaskHistory] @all
+    taskCategoriesAll(
+        name: String @where(operator: "like")
+    ): [TaskCategory!] @all
+    taskCategoriesWithTasks(
+        orderBy: [OrderBySchema!] @orderBy
+    ): [TaskCategory!]
+        @all
+        @builder(method: "\\App\\Models\\TaskCategory@builderCategoriesWithTasks")
 }
 extend type Query {
     currentUser: User @auth
@@ -64,6 +88,7 @@ type Mutation @guard {
     createTask(
         name: String! @rules(apply: ["required"])
         description: String
+        categoryName: String
         periodType: String
         periodTypeTime: String
         periodTypeWeekDays: [String]
@@ -75,6 +100,7 @@ type Mutation @guard {
         id: ID! @eq @rules(apply: ["integer", "required"])
         name: String! @rules(apply: ["required"])
         description: String
+        categoryName: String
         periodType: String
         periodTypeTime: String
         periodTypeWeekDays: [String]
@@ -141,14 +167,3 @@ enum SortOrder {
     ASC
     DESC
 }
-
-# type Query @guard {
-#     user(
-#         id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
-#         email: String
-#             @eq
-#             @rules(apply: ["prohibits:id", "required_without:id", "email"])
-#     ): User @find
-#     users(name: String @where(operator: "like")): [User!]
-#         @paginate(defaultCount: 10)
-# }

@@ -2,21 +2,29 @@
 
 namespace App\GraphQL\Mutations;
 
-use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 use App\Models\Task;
+use App\Models\TaskCategory;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
 class TaskMutator
 {
     /**
      * Return a value for the field.
      *
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function create($rootValue, array $args, GraphQLContext $context)
     {
+        if (!empty($args['categoryName'])) {
+            $category = TaskCategory::firstOrCreate([
+                'name' => $args['categoryName']
+            ]);
+            $args['categoryId'] = $category->id;
+        }
+
         /* @var $task Task */
         $task = Task::create($args);
         if ($task->isActive) {
@@ -32,20 +40,27 @@ class TaskMutator
     /**
      * Return a value for the field.
      *
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function update($rootValue, array $args, GraphQLContext $context)
     {
         /* @var $task Task */
         $task = Task::where([
-                'id' => $args['id'],
-                'userId' => $context->user()->id,
-            ])->first();
+            'id' => $args['id'],
+            'userId' => $context->user()->id,
+        ])->first();
         if (!$task) {
             return response(['message' => '404'], 422);
+        }
+
+        if (!empty($args['categoryName'])) {
+            $category = TaskCategory::firstOrCreate([
+                'name' => $args['categoryName']
+            ]);
+            $args['categoryId'] = $category->id;
         }
 
         $task->fill($args);
@@ -61,9 +76,9 @@ class TaskMutator
     {
         /* @var $task Task */
         $task = Task::where([
-                'id' => $args['id'],
-                'userId' => $context->user()->id,
-            ])->first();
+            'id' => $args['id'],
+            'userId' => $context->user()->id,
+        ])->first();
         if (!$task) {
             return response(['message' => '404'], 422);
         }
@@ -80,12 +95,13 @@ class TaskMutator
         return $task;
     }
 
-    public function deleteTask($rootValue, array $args, GraphQLContext $context) {
+    public function deleteTask($rootValue, array $args, GraphQLContext $context)
+    {
         /* @var $task Task */
         $task = Task::where([
-                'id' => $args['id'],
-                'userId' => $context->user()->id,
-            ])->first();
+            'id' => $args['id'],
+            'userId' => $context->user()->id,
+        ])->first();
         if (!$task) {
             return response(['message' => '404'], 422);
         }
