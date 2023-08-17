@@ -17,7 +17,7 @@ class TaskManager
      * @param bool $forceMoveToNextPeriod
      * @return array
      */
-    public function calculateNextRunDateTime(bool $forceMoveToNextPeriod = false): array
+    public function calculateNextRunDateTime(bool $forceMoveToNextPeriod = false): ?array
     {
         $currentTimestamp = time() - $this->task->user->timezoneOffset * 60;
         $nextRunDateTime = null;
@@ -60,7 +60,7 @@ class TaskManager
                 $scheduledTimestamp += 86400;
                 $i++;
             }
-        } else if ($this->task->periodTypeId == TaskPeriodTypesEnum::Yearly) {
+        } else if (in_array($this->task->periodTypeId, [TaskPeriodTypesEnum::Yearly, TaskPeriodTypesEnum::Once])) {
             // make available dates array
             $dates = [];
             foreach ($this->task->periodTypeMonthDays as $day) {
@@ -85,17 +85,13 @@ class TaskManager
             if ($minDate < 2300000000) {
                 $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $minDate);
             }
-        } else if ($this->task->periodTypeId == TaskPeriodTypesEnum::Once) {
-            $nextRunDateTime = null;
-        }
-
-        if ($nextRunDateTime) {
-            $nextRunDateTimeUtc = date('Y-m-d H:i:00', (strtotime($nextRunDateTime) + $this->task->user->timezoneOffset * 60));
+        } else {
+            return null;
         }
 
         return [
             'nextRunDateTime' => $nextRunDateTime,
-            'nextRunDateTimeUtc' => $nextRunDateTimeUtc ?? null,
+            'nextRunDateTimeUtc' => date('Y-m-d H:i:00', (strtotime($nextRunDateTime) + $this->task->user->timezoneOffset * 60)),
         ];
     }
 }

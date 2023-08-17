@@ -96,9 +96,10 @@ class Task extends Model
     public function calculateAndFillNextRunDateTime(bool $forceMoveToNextPeriod = false): void
     {
         $calculationResult = $this->manager()->calculateNextRunDateTime($forceMoveToNextPeriod);
-
-        $this->nextRunDateTime = $calculationResult['nextRunDateTime'];
-        $this->nextRunDateTimeUtc = $calculationResult['nextRunDateTimeUtc'];
+        if (!is_null($calculationResult)) {
+            $this->nextRunDateTime = $calculationResult['nextRunDateTime'];
+            $this->nextRunDateTimeUtc = $calculationResult['nextRunDateTimeUtc'];
+        }
     }
 
     public function category(): BelongsTo
