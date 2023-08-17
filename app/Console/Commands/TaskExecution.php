@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Enums\TaskPeriodTypesEnum;
-use Illuminate\Console\Command;
 use App\Models\Task;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class TaskExecution extends Command
@@ -29,9 +29,9 @@ class TaskExecution extends Command
      *
      * @return mixed
      */
-    public function handle()
+    public function handle(): void
     {
-        $tasks = Task::where('isActive', 1)
+        $tasks = Task::where('isActive', true)
             ->where('nextRunDateTimeUtc', date('Y-m-d H:i:00'))
             ->with('userDevices')
             ->get();

@@ -89,9 +89,13 @@ class TaskManager
             $nextRunDateTime = null;
         }
 
+        if ($nextRunDateTime) {
+            $nextRunDateTimeUtc = date('Y-m-d H:i:00', (strtotime($nextRunDateTime) + $this->task->user->timezoneOffset * 60));
+        }
+
         return [
             'nextRunDateTime' => $nextRunDateTime,
-            'nextRunDateTimeUtc' => date('Y-m-d H:i:00', (strtotime($nextRunDateTime) + $this->task->user->timezoneOffset * 60)),
+            'nextRunDateTimeUtc' => $nextRunDateTimeUtc ?? null,
         ];
     }
 }
