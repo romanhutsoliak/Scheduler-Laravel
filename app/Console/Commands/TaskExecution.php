@@ -67,11 +67,6 @@ class TaskExecution extends Command
                     ],
                 ]);
             }
-
-            if ($task->periodTypeId !== TaskPeriodTypesEnum::Once) {
-                $task->calculateAndFillNextRunDateTime();
-                $task->save();
-            }
         }
     }
 }
