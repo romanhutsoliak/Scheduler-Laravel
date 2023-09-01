@@ -2,6 +2,7 @@
 
 namespace App\GraphQL\Mutations;
 
+use App\Enums\TaskPeriodTypesEnum;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
@@ -87,7 +88,7 @@ class TaskMutator
             'notes' => $args['notes'] ?? ''
         ]);
 
-        if ($task->isActive) {
+        if ($task->isActive && $task->periodTypeId != TaskPeriodTypesEnum::Once) {
             $task->calculateAndFillNextRunDateTime(true);
         }
         $task->save();
