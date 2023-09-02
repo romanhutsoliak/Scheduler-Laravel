@@ -88,7 +88,10 @@ class TaskMutator
             'notes' => $args['notes'] ?? ''
         ]);
 
-        if ($task->isActive && $task->periodTypeId != TaskPeriodTypesEnum::Once) {
+        if ($task->periodTypeId === TaskPeriodTypesEnum::Once) {
+            $task->isActive = false;
+        }
+        elseif ($task->isActive) {
             $task->calculateAndFillNextRunDateTime(true);
         }
         $task->save();
