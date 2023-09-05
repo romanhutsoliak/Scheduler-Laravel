@@ -15,8 +15,10 @@ class UserDeviceMutator
      */
     public function create($rootValue, array $args, GraphQLContext $context)
     {
-        $userDeviceData = ['appVersion' => $args['appVersion'],];
-        if (!empty($args['notificationToken'])) $userDeviceData['notificationToken'] = $args['notificationToken'];
+        $userDeviceData = ['appVersion' => $args['appVersion']];
+        if (!empty($args['notificationToken'])) {
+            $userDeviceData['notificationToken'] = $args['notificationToken'];
+        }
         $userDevice = UserDevice::updateOrCreate([
             'userId' => $context->user()->id,
             'deviceId' => $args['deviceId'],

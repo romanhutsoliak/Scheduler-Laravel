@@ -14,6 +14,7 @@ final class Login
      */
     public function __invoke($_, array $args)
     {
+        /** @var User $user */
         $user = User::where('email', $args['email'])
             ->whereNotNull('email')->whereNotNull('password')->first();
 

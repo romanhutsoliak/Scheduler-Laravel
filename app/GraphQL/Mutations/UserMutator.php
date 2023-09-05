@@ -2,17 +2,17 @@
 
 namespace App\GraphQL\Mutations;
 
+use App\Exceptions\CustomException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
-use App\Exceptions\CustomException;
 
 final class UserMutator
 {
     /**
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function update($rootValue, array $args, GraphQLContext $context)
@@ -36,7 +36,9 @@ final class UserMutator
         }
 
         $name = $args['name'] ?? '';
-        if (!$name && $args['email']) $name = preg_replace('#\@.+$#', '', $args['email']);
+        if (!$name && $args['email']) {
+            $name = preg_replace('#\@.+$#', '', $args['email']);
+        }
 
         $user = User::find($context->user()->id);
         if ($user) {
@@ -60,9 +62,9 @@ final class UserMutator
     }
 
     /**
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function register($rootValue, array $args, GraphQLContext $context)
@@ -87,20 +89,21 @@ final class UserMutator
     }
 
     /**
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function createFromDevice($rootValue, array $args, GraphQLContext $context)
     {
-        $userExists = User::where('initialDeviceId', $args['deviceId'])
+        $initialDeviceId = $args['manufacturer'] . '_' . $args['model'] . '_' . $args['deviceId'];
+        $userExists = User::where('initialDeviceId', $initialDeviceId)
             ->first();
 
         $token = null;
         if (!$userExists) {
             $user = User::create([
-                'initialDeviceId' => $args['deviceId'],
+                'initialDeviceId' => $initialDeviceId,
                 'email' => null,
                 'password' => null,
                 'timezoneOffset' => $args['timezoneOffset'],
@@ -125,9 +128,9 @@ final class UserMutator
     }
 
     /**
-     * @param  null  $rootValue
-     * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
+     * @param null $rootValue
+     * @param mixed[] $args
+     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
      * @return mixed
      */
     public function updateTimezone($rootValue, array $args, GraphQLContext $context)
