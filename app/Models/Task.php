@@ -40,11 +40,9 @@ class Task extends Model
         'periodTypeId' => TaskPeriodTypesEnum::class,
     ];
 
-    protected function periodType(): Attribute
+    protected function getPeriodTypeAttribute(): string
     {
-        return Attribute::make(
-            get: fn() => $this->periodTypeId->name ?? '',
-        );
+        return $this->periodTypeId->name ?? '';
     }
 
     public function fill(array $attributes): self
