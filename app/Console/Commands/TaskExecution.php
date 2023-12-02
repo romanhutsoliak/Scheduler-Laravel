@@ -44,7 +44,7 @@ class TaskExecution extends Command
                 Http::withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'key='.env('FIRE_BASE_KEY'),
+                    'Authorization' => 'key='.config('services.firebase.key'),
                 ])->post('https://fcm.googleapis.com/fcm/send', [
                     'notification' => [
                         'title' => trim($task->name),
