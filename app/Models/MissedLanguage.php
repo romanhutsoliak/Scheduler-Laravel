@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use App\Models\BaseModel;
-
-class MissedLanguage extends BaseModel {
-
+class MissedLanguage extends BaseModel
+{
     public $timestamps = false;
+
     protected $fillable = [
         'language',
         'text',
@@ -14,5 +13,4 @@ class MissedLanguage extends BaseModel {
         'created_at',
         'updated_at',
     ];
-
 }

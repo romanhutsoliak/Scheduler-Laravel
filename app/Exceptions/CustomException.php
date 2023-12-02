@@ -10,7 +10,9 @@ class CustomException extends Exception implements RendersErrorsExtensions
     /**
      * @var @string
      */
-    protected $category, $data;
+    protected $category;
+
+    protected $data;
 
     public function __construct(string $message, array $data = [], string $category = 'validation')
     {
@@ -34,7 +36,6 @@ class CustomException extends Exception implements RendersErrorsExtensions
      * Value "graphql" is reserved for errors produced by query parsing or validation, do not use it.
      *
      * @api
-     * @return string
      */
     public function getCategory(): string
     {
@@ -44,8 +45,6 @@ class CustomException extends Exception implements RendersErrorsExtensions
     /**
      * Return the content that is put in the "extensions" part
      * of the returned error.
-     *
-     * @return array
      */
     public function extensionsContent(): array
     {

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\TaskPeriodTypesEnum;
 use App\Managers\TaskManager;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +31,7 @@ class Task extends Model
     ];
 
     protected $appends = ['periodType'];
+
     public $casts = [
         'periodTypeWeekDays' => 'array',
         'periodTypeMonthDays' => 'array',
@@ -47,10 +47,11 @@ class Task extends Model
 
     public function fill(array $attributes): self
     {
-        if (!empty($attributes['periodType'])) {
+        if (! empty($attributes['periodType'])) {
             $attributes['periodTypeId'] = collect(TaskPeriodTypesEnum::cases())->where('name', $attributes['periodType'])->first() ?? null;
             unset($attributes['periodType']);
         }
+
         return parent::fill($attributes);
     }
 
@@ -59,7 +60,7 @@ class Task extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (!$model->userId) {
+            if (! $model->userId) {
                 $model->userId = auth()->user()->id ?? null;
             }
         });
@@ -88,13 +89,12 @@ class Task extends Model
     /**
      * Calculate Next Run Date Time
      *
-     * @param boolean $forceMoveToNextPeriod - force move event to next time if there is not long time to next event
-     * @return void
+     * @param  bool  $forceMoveToNextPeriod - force move event to next time if there is not long time to next event
      */
     public function calculateAndFillNextRunDateTime(bool $forceMoveToNextPeriod = false): void
     {
         $calculationResult = $this->manager()->calculateNextRunDateTime($forceMoveToNextPeriod);
-        if (!is_null($calculationResult)) {
+        if (! is_null($calculationResult)) {
             $this->nextRunDateTime = $calculationResult['nextRunDateTime'];
             $this->nextRunDateTimeUtc = $calculationResult['nextRunDateTimeUtc'];
         }
@@ -107,28 +107,20 @@ class Task extends Model
 
     /**
      * \@scope Search on tasks list
-     *
-     * @param $query
-     * @param $search
-     * @return void
      */
     public function scopeSearchOnList($query, $search): void
     {
-        $query->when(!is_null($search), function ($query) use ($search) {
-            $query->where('name', 'like', '%' . $search . '%');
+        $query->when(! is_null($search), function ($query) use ($search) {
+            $query->where('name', 'like', '%'.$search.'%');
         });
     }
 
     /**
      * \@scope Filter on tasks list
-     *
-     * @param $query
-     * @param $filter
-     * @return void
      */
     public function scopeFiltersOnList($query, $filter): void
     {
-        $query->when(!empty($filter['category']), function ($query) use ($filter) {
+        $query->when(! empty($filter['category']), function ($query) use ($filter) {
             $query->whereHas('category', function ($query) use ($filter) {
                 $query->where('slug', $filter['category']);
             });

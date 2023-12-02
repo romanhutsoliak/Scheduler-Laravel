@@ -2,15 +2,14 @@
 
 namespace App\GraphQL\Mutations;
 
-use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 use App\Models\MissedLanguage;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
-class MissedLanguageMutator {
-
+class MissedLanguageMutator
+{
     /**
      * @param  null  $rootValue
      * @param  mixed[]  $args
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GraphQLContext  $context
      * @return mixed
      */
     public function create($rootValue, array $args, GraphQLContext $context)

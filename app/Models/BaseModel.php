@@ -16,7 +16,8 @@ class BaseModel extends Model
         'media',
     ];
 
-    public function __construct(array $attributes = []) {
+    public function __construct(array $attributes = [])
+    {
         $this->casts = array_merge($this->casts_common, $this->casts);
         $this->hidden = array_merge($this->hidden_common, $this->hidden);
         parent::__construct($attributes);

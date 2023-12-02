@@ -20,7 +20,7 @@ final class Login
 
         if (
             empty($args['email']) || empty($args['password']) ||
-            !$user || !Hash::check($args['password'], $user->password)
+            ! $user || ! Hash::check($args['password'], $user->password)
         ) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],

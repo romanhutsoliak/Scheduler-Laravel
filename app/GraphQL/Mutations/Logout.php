@@ -15,7 +15,7 @@ final class Logout
         $user = Auth::user();
         $user->tokens()->delete();
 
-        if (!empty($args['deviceId'])) {
+        if (! empty($args['deviceId'])) {
             $user->devices()->where('deviceId', $args['deviceId'])->delete();
         }
 

@@ -12,16 +12,15 @@ class TaskMutator
     /**
      * Return a value for the field.
      *
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function create($rootValue, array $args, GraphQLContext $context)
     {
-        if (!empty($args['categoryName'])) {
+        if (! empty($args['categoryName'])) {
             $category = TaskCategory::firstOrCreate([
-                'name' => $args['categoryName']
+                'name' => $args['categoryName'],
             ]);
             $args['categoryId'] = $category->id;
         }
@@ -41,9 +40,8 @@ class TaskMutator
     /**
      * Return a value for the field.
      *
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function update($rootValue, array $args, GraphQLContext $context)
@@ -53,13 +51,13 @@ class TaskMutator
             'id' => $args['id'],
             'userId' => $context->user()->id,
         ])->first();
-        if (!$task) {
+        if (! $task) {
             return response(['message' => '404'], 422);
         }
 
-        if (!empty($args['categoryName'])) {
+        if (! empty($args['categoryName'])) {
             $category = TaskCategory::firstOrCreate([
-                'name' => $args['categoryName']
+                'name' => $args['categoryName'],
             ]);
             $args['categoryId'] = $category->id;
         }
@@ -80,18 +78,17 @@ class TaskMutator
             'id' => $args['id'],
             'userId' => $context->user()->id,
         ])->first();
-        if (!$task) {
+        if (! $task) {
             return response(['message' => '404'], 422);
         }
 
         $task->history()->create([
-            'notes' => $args['notes'] ?? ''
+            'notes' => $args['notes'] ?? '',
         ]);
 
         if ($task->periodTypeId === TaskPeriodTypesEnum::Once) {
             $task->isActive = false;
-        }
-        elseif ($task->isActive) {
+        } elseif ($task->isActive) {
             $task->calculateAndFillNextRunDateTime(true);
         }
         $task->save();
@@ -106,7 +103,7 @@ class TaskMutator
             'id' => $args['id'],
             'userId' => $context->user()->id,
         ])->first();
-        if (!$task) {
+        if (! $task) {
             return response(['message' => '404'], 422);
         }
 
@@ -114,5 +111,4 @@ class TaskMutator
 
         return ['result' => 'ok'];
     }
-
 }

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 return [
     /*
@@ -261,7 +263,7 @@ return [
 
     'field_middleware' => [
         Nuwave\Lighthouse\Schema\Directives\TrimDirective::class,
-//        Nuwave\Lighthouse\Schema\Directives\ConvertEmptyStringsToNullDirective::class,
+        //        Nuwave\Lighthouse\Schema\Directives\ConvertEmptyStringsToNullDirective::class,
         Nuwave\Lighthouse\Schema\Directives\SanitizeDirective::class,
         Nuwave\Lighthouse\Validation\ValidateDirective::class,
         Nuwave\Lighthouse\Schema\Directives\TransformArgsDirective::class,
@@ -396,13 +398,13 @@ return [
             ],
             'pusher' => [
                 'driver' => 'pusher',
-                'routes' => Nuwave\Lighthouse\Subscriptions\SubscriptionRouter::class . '@pusher',
+                'routes' => Nuwave\Lighthouse\Subscriptions\SubscriptionRouter::class.'@pusher',
                 'connection' => 'pusher',
             ],
             'echo' => [
                 'driver' => 'echo',
                 'connection' => env('LIGHTHOUSE_SUBSCRIPTION_REDIS_CONNECTION', 'default'),
-                'routes' => Nuwave\Lighthouse\Subscriptions\SubscriptionRouter::class . '@echoRoutes',
+                'routes' => Nuwave\Lighthouse\Subscriptions\SubscriptionRouter::class.'@echoRoutes',
             ],
         ],
 

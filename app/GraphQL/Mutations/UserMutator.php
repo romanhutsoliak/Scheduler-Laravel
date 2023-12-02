@@ -10,9 +10,8 @@ use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 final class UserMutator
 {
     /**
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function update($rootValue, array $args, GraphQLContext $context)
@@ -25,10 +24,10 @@ final class UserMutator
         ) {
             $validationErrors['email'] = ['The email has already been taken.'];
         }
-        if (!$context->user()->email && empty($args['password'])) {
+        if (! $context->user()->email && empty($args['password'])) {
             $validationErrors['password'] = ['Password is required on the first update'];
         }
-        if (!empty($validationErrors)) {
+        if (! empty($validationErrors)) {
             throw new CustomException(
                 'Validation failed for the field [updateProfile].',
                 ['validation' => $validationErrors]
@@ -36,7 +35,7 @@ final class UserMutator
         }
 
         $name = $args['name'] ?? '';
-        if (!$name && $args['email']) {
+        if (! $name && $args['email']) {
             $name = preg_replace('#\@.+$#', '', $args['email']);
         }
 
@@ -46,7 +45,7 @@ final class UserMutator
                 'name' => $name,
                 'email' => $args['email'],
             ];
-            if (!empty($args['password'])) {
+            if (! empty($args['password'])) {
                 $userData = array_merge($userData, [
                     'password' => Hash::make($args['password']),
                 ]);
@@ -62,15 +61,16 @@ final class UserMutator
     }
 
     /**
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function register($rootValue, array $args, GraphQLContext $context)
     {
         $name = $args['name'] ?? '';
-        if (!$name) $name = preg_replace('#\@.+$#', '', $args['email']);
+        if (! $name) {
+            $name = preg_replace('#\@.+$#', '', $args['email']);
+        }
 
         $user = User::create([
             'name' => $name,
@@ -89,19 +89,18 @@ final class UserMutator
     }
 
     /**
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function createFromDevice($rootValue, array $args, GraphQLContext $context)
     {
-        $initialDeviceId = $args['manufacturer'] . '_' . $args['model'] . '_' . $args['deviceId'];
+        $initialDeviceId = $args['manufacturer'].'_'.$args['model'].'_'.$args['deviceId'];
         $userExists = User::where('initialDeviceId', $initialDeviceId)
             ->first();
 
         $token = null;
-        if (!$userExists) {
+        if (! $userExists) {
             $user = User::create([
                 'initialDeviceId' => $initialDeviceId,
                 'email' => null,
@@ -109,7 +108,7 @@ final class UserMutator
                 'timezoneOffset' => $args['timezoneOffset'],
             ]);
             $token = $user->createToken('')->plainTextToken;
-        } elseif ($userExists && !$userExists->email) {
+        } elseif ($userExists && ! $userExists->email) {
             $user = $userExists;
             $token = $userExists->createToken('')->plainTextToken;
         } else {
@@ -128,9 +127,8 @@ final class UserMutator
     }
 
     /**
-     * @param null $rootValue
-     * @param mixed[] $args
-     * @param \Nuwave\Lighthouse\Support\Contracts\GraphQLContext $context
+     * @param  null  $rootValue
+     * @param  mixed[]  $args
      * @return mixed
      */
     public function updateTimezone($rootValue, array $args, GraphQLContext $context)
@@ -138,7 +136,7 @@ final class UserMutator
         $user = User::find($context->user()->id);
         if ($user) {
             $user->update([
-                'timezoneOffset' => $args['timezoneOffset']
+                'timezoneOffset' => $args['timezoneOffset'],
             ]);
         }
 

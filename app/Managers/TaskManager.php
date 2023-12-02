@@ -13,31 +13,28 @@ class TaskManager
 
     /**
      *  Calculate Next Run Date Time
-     *
-     * @param bool $forceMoveToNextPeriod
-     * @return array
      */
     public function calculateNextRunDateTime(bool $forceMoveToNextPeriod = false): ?array
     {
         $currentTimestamp = time() - $this->task->user->timezoneOffset * 60;
         $nextRunDateTime = null;
-        $scheduledTimestamp = strtotime(date('Y-m-d ' . $this->task->periodTypeTime . ':00', $currentTimestamp));
+        $scheduledTimestamp = strtotime(date('Y-m-d '.$this->task->periodTypeTime.':00', $currentTimestamp));
 
         if ($this->task->periodTypeId == TaskPeriodTypesEnum::Daily) {
             if ($currentTimestamp < $scheduledTimestamp) {
                 if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (3 * 3600)) {
                     $scheduledTimestamp += 86400;
                 }
-                $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $scheduledTimestamp);
+                $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $scheduledTimestamp);
             } else {
-                $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $scheduledTimestamp + 86400);
+                $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $scheduledTimestamp + 86400);
             }
-        } else if ($this->task->periodTypeId == TaskPeriodTypesEnum::Weekly) {
+        } elseif ($this->task->periodTypeId == TaskPeriodTypesEnum::Weekly) {
             $i = 0;
-            while (!$nextRunDateTime && $i < 100) {
+            while (! $nextRunDateTime && $i < 100) {
                 if ($currentTimestamp < $scheduledTimestamp) {
                     if (in_array(date('N', $scheduledTimestamp), $this->task->periodTypeWeekDays)) {
-                        $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $scheduledTimestamp);
+                        $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $scheduledTimestamp);
                         if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < 86400) {
                             $nextRunDateTime = null;
                         }
@@ -46,12 +43,12 @@ class TaskManager
                 $scheduledTimestamp += 86400;
                 $i++;
             }
-        } else if ($this->task->periodTypeId == TaskPeriodTypesEnum::Monthly) {
+        } elseif ($this->task->periodTypeId == TaskPeriodTypesEnum::Monthly) {
             $i = 0;
-            while (!$nextRunDateTime && $i < 100) {
+            while (! $nextRunDateTime && $i < 100) {
                 if ($currentTimestamp < $scheduledTimestamp) {
                     if (in_array(date('j', $scheduledTimestamp), $this->task->periodTypeMonthDays)) {
-                        $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $scheduledTimestamp);
+                        $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $scheduledTimestamp);
                         if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (2 * 86400)) {
                             $nextRunDateTime = null;
                         }
@@ -60,19 +57,19 @@ class TaskManager
                 $scheduledTimestamp += 86400;
                 $i++;
             }
-        } else if (in_array($this->task->periodTypeId, [TaskPeriodTypesEnum::Yearly, TaskPeriodTypesEnum::Once])) {
+        } elseif (in_array($this->task->periodTypeId, [TaskPeriodTypesEnum::Yearly, TaskPeriodTypesEnum::Once])) {
             // make available dates array
             $dates = [];
             foreach ($this->task->periodTypeMonthDays as $day) {
                 foreach ($this->task->periodTypeMonths as $month) {
-                    $scheduledTimestamp = strtotime(date('Y-' . $month . '-' . $day . ' ' . $this->task->periodTypeTime . ':00'));
+                    $scheduledTimestamp = strtotime(date('Y-'.$month.'-'.$day.' '.$this->task->periodTypeTime.':00'));
                     if ($currentTimestamp < $scheduledTimestamp) {
                         $dates[] = $scheduledTimestamp;
                         if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (3 * 86400)) {
                             $dates = array_pop($dates);
                         }
                     } else {
-                        $dates[] = strtotime(date((string)((int)date('Y') + 1) . '-' . $month . '-' . $day . ' ' . $this->task->periodTypeTime . ':00'));
+                        $dates[] = strtotime(date((string) ((int) date('Y') + 1).'-'.$month.'-'.$day.' '.$this->task->periodTypeTime.':00'));
                     }
                 }
             }
@@ -83,7 +80,7 @@ class TaskManager
                 }
             }
             if ($minDate < 2300000000) {
-                $nextRunDateTime = date('Y-m-d ' . $this->task->periodTypeTime . ':00', $minDate);
+                $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $minDate);
             }
         } else {
             return null;

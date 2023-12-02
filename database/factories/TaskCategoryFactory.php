@@ -17,6 +17,7 @@ class TaskCategoryFactory extends Factory
     public function definition()
     {
         $name = fake()->name();
+
         return [
             'name' => ucfirst($name),
             'slug' => strtolower($name),
