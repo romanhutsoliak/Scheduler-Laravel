@@ -35,4 +35,7 @@ return [
         'key' => env('FIRE_BASE_KEY'),
     ],
 
+    'http_logger' => [
+        'enabled' => env('HTTP_LOGGER_ENABLED', false),
+    ]
 ];
