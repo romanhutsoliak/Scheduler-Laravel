@@ -16,4 +16,5 @@ yarn-error.log
 /.vscode
 /nbproject
 /supervisord.log
+/.phpunit.cache
 

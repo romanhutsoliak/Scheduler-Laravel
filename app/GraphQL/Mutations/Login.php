@@ -15,12 +15,16 @@ final class Login
     public function __invoke($_, array $args)
     {
         /** @var User $user */
-        $user = User::where('email', $args['email'])
-            ->whereNotNull('email')->whereNotNull('password')->first();
+        $user = User::where('email', $args['email'] ?? 'non_existed_email')
+            ->whereNotNull('email')
+            ->whereNotNull('password')
+            ->first();
 
         if (
-            empty($args['email']) || empty($args['password']) ||
-            ! $user || ! Hash::check($args['password'], $user->password)
+            empty($args['email']) ||
+            empty($args['password']) ||
+            ! $user ||
+            ! Hash::check($args['password'], $user->password)
         ) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],

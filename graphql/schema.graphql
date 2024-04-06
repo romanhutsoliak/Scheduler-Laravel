@@ -4,11 +4,7 @@ scalar DateTime
 
 type User {
     name: String
-    email: String
-    email_verified_at: DateTime
     timezoneOffset: Int
-    created_at: DateTime!
-    updated_at: DateTime!
 }
 
 type Task {
@@ -141,23 +137,16 @@ type Login {
 }
 extend type Mutation {
     login(email: String! @rules(apply: ["email"]), password: String!): Login
-    userRegistration(
-        name: String
-        email: String! @rules(apply: ["email", "unique:users,email"])
-        password: String! @rules(apply: ["confirmed"])
-        password_confirmation: String!
-    ): Login @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@register")
     logout(deviceId: String): ResultOk @guard
         @field(resolver: "App\\GraphQL\\Mutations\\Logout")
-    createUserFromDevice(deviceId: String!, timezoneOffset: Int): Login
-        @field(
-            resolver: "App\\GraphQL\\Mutations\\UserMutator@createFromDevice"
-        )
+    createUserFromDevice(
+        deviceId: String!
+        manufacturer: String!
+        model: String!
+        timezoneOffset: Int
+    ): Login @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@createFromDevice")
     updateProfile(
         name: String
-        email: String! @rules(apply: ["email"])
-        password: String @rules(apply: ["confirmed"])
-        password_confirmation: String
     ): User
         @guard
         @field(resolver: "App\\GraphQL\\Mutations\\UserMutator@update")
