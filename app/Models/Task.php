@@ -89,7 +89,7 @@ class Task extends Model
     /**
      * Calculate Next Run Date Time
      *
-     * @param  bool  $forceMoveToNextPeriod - force move event to next time if there is not long time to next event
+     * @param  bool  $forceMoveToNextPeriod  - force move event to next time if there is not long time to next event
      */
     public function calculateAndFillNextRunDateTime(bool $forceMoveToNextPeriod = false): void
     {

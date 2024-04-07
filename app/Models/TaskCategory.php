@@ -42,8 +42,8 @@ class TaskCategory extends Model
     /**
      * \@builder Returns only category which have tasks
      *
-     * @param $query
-     * @param $name
+     * @param  $query
+     * @param  $name
      * @return void
      */
     public function builderCategoriesWithTasks(Builder $builder)

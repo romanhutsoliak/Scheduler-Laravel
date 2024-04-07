@@ -37,5 +37,5 @@ return [
 
     'http_logger' => [
         'enabled' => env('HTTP_LOGGER_ENABLED', false),
-    ]
+    ],
 ];
