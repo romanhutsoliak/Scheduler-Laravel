@@ -49,11 +49,13 @@ class TaskManager
                 if ($currentTimestamp < $scheduledTimestamp) {
                     if (in_array(date('j', $scheduledTimestamp), $this->task->periodTypeMonthDays)) {
                         $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $scheduledTimestamp);
+
                         if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (2 * 86400)) {
                             $nextRunDateTime = null;
                         }
                     }
                 }
+
                 $scheduledTimestamp += 86400;
                 $i++;
             }
@@ -63,8 +65,10 @@ class TaskManager
             foreach ($this->task->periodTypeMonthDays as $day) {
                 foreach ($this->task->periodTypeMonths as $month) {
                     $scheduledTimestamp = strtotime(date('Y-'.$month.'-'.$day.' '.$this->task->periodTypeTime.':00'));
+
                     if ($currentTimestamp < $scheduledTimestamp) {
                         $dates[] = $scheduledTimestamp;
+
                         if ($forceMoveToNextPeriod && $scheduledTimestamp - $currentTimestamp < (3 * 86400)) {
                             $dates = array_pop($dates);
                         }
@@ -73,12 +77,15 @@ class TaskManager
                     }
                 }
             }
+
             $minDate = 2300000000;
+
             foreach ($dates as $date) {
                 if ($date < $minDate) {
                     $minDate = $date;
                 }
             }
+
             if ($minDate < 2300000000) {
                 $nextRunDateTime = date('Y-m-d '.$this->task->periodTypeTime.':00', $minDate);
             }
