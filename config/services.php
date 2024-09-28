@@ -32,6 +32,7 @@ return [
     ],
 
     'firebase' => [
+        'project_id' => env('FIRE_BASE_PROJECT_ID'),
         'key' => env('FIRE_BASE_KEY'),
     ],
 
