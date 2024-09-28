@@ -10,7 +10,6 @@ class UserDeviceMutator
     /**
      * @param  null  $rootValue
      * @param  mixed[]  $args
-     * @return mixed
      */
     public function create($rootValue, array $args, GraphQLContext $context)
     {
