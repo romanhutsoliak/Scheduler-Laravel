@@ -16,7 +16,7 @@ class FirebaseNotificationService
     {
         $this->firebaseProjectId = config('services.firebase.project_id');
 
-        $this->googleClient = new GoogleClient();
+        $this->googleClient = new GoogleClient;
         $this->googleClient->setAuthConfig(Storage::path('firebase/service-account.json')); // Path to your service account JSON
         $this->googleClient->addScope('https://www.googleapis.com/auth/firebase.messaging');
     }
@@ -47,14 +47,14 @@ class FirebaseNotificationService
             ])->post("v1/projects/{$this->firebaseProjectId}/messages:send", [
                 // https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages/send
                 'message' => [
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
                     'token' => $deviceToken,
-                    'data' => $data,
                     'android' => [
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
                         'priority' => 'HIGH',
+                        'data' => $data,
                     ],
                     // IOS settings
                     //                    'apns' => [],
